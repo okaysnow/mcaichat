@@ -1,0 +1,37 @@
+# Gradle
+.gradle/
+build/
+out/
+*.log
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Minecraft
+run/
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config files with API keys (DON'T COMMIT THESE!)
+config/aichat.json
+config/learning.json
+config/memory.json
+config/friends.json
+
+# Gradle wrapper jar (optional - some prefer to include this)
+# gradle/wrapper/gradle-wrapper.jar

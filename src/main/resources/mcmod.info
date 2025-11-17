@@ -1,0 +1,16 @@
+[
+{
+  "modid": "aichat",
+  "name": "AI Chat Mod",
+  "description": "AI-powered chat response mod for Hypixel",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Developer"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
