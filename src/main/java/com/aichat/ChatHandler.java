@@ -15,6 +15,9 @@ import com.aichat.features.ConfidenceTracker;
 import com.aichat.features.ConversationStarter;
 import com.aichat.features.RateLimitMonitor;
 import com.aichat.features.TypingSimulator;
+import com.aichat.features.WebSearchService;
+import com.aichat.features.SentimentAnalyzer;
+import com.aichat.security.ScamDetector;
 import com.aichat.friends.FriendManager;
 import com.aichat.hypixel.PartyLeaderAssistant;
 import com.aichat.hypixel.SmartInvites;
@@ -157,6 +160,12 @@ public class ChatHandler {
             }
             SmartInvites.analyzeMessage(sender, content);
             PartyLeaderAssistant.onMemberActivity(sender);
+            
+            boolean isScam = false;
+            if (ModConfig.scamDetection) {
+                isScam = ScamDetector.detectScam(content, sender);
+            }
+            
             if (ModConfig.randomDelay) {
                 long randomDelayMs = (long)(Math.random() * 2000);
                 lastResponseTime = currentTime + randomDelayMs;
@@ -167,6 +176,7 @@ public class ChatHandler {
             RateLimitMonitor.trackResponse();
             final String finalSender = sender;
             final String finalContent = content;
+            final boolean finalIsScam = isScam;
             final ChatChannel finalChannel = channel;
             if (debugMode) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
@@ -181,9 +191,48 @@ public class ChatHandler {
             }
             System.out.println("[AI Chat] Message detected from " + finalSender + " in " + channelType + ": " + finalContent);
             TopicTracker.analyzeAndTrack(finalSender, finalContent);
-            TranslationService.autoTranslate(finalContent).thenAccept(translatedContent -> {
-                ConversationManager.addMessage(finalSender, "user", translatedContent);
-                MemoryPersistence.addToMemory(finalSender, "user", translatedContent);
+            
+            String contextMessage = finalContent;
+            if (finalIsScam) {
+                contextMessage = finalContent + ScamDetector.getAIWarning(finalSender);
+            }
+            
+            if (ModConfig.sentimentAnalysis) {
+                SentimentAnalyzer.SentimentResult sentiment = SentimentAnalyzer.analyze(finalContent);
+                if (debugMode) {
+                    Minecraft.getMinecraft().thePlayer.addChatMessage(
+                        new ChatComponentText(EnumChatFormatting.DARK_GRAY + "[DEBUG] Sentiment: " + sentiment.toString())
+                    );
+                }
+                contextMessage += SentimentAnalyzer.getPersonalityAdjustment(sentiment.type);
+            }
+            
+            final String finalContextMessage = contextMessage;
+            
+            if (ModConfig.webSearch && WebSearchService.shouldSearch(finalContent)) {
+                String query = WebSearchService.extractQuery(finalContent);
+                if (debugMode) {
+                    Minecraft.getMinecraft().thePlayer.addChatMessage(
+                        new ChatComponentText(EnumChatFormatting.DARK_GRAY + "[DEBUG] Web search triggered: " + query)
+                    );
+                }
+                WebSearchService.search(query).thenAccept(searchResults -> {
+                    String messageWithSearch = finalContextMessage + "\n" + searchResults;
+                    TranslationService.autoTranslate(messageWithSearch).thenAccept(translatedContent -> {
+                        processAIResponse(finalSender, finalContent, translatedContent, finalChannel, channelType);
+                    });
+                });
+            } else {
+                TranslationService.autoTranslate(finalContextMessage).thenAccept(translatedContent -> {
+                    processAIResponse(finalSender, finalContent, translatedContent, finalChannel, channelType);
+                });
+            }
+        }
+    }
+    
+    private void processAIResponse(String finalSender, String originalMessage, String translatedContent, ChatChannel finalChannel, ChatChannel.ChannelType channelType) {
+                ConversationManager.addMessage(finalSender, "user", originalMessage);
+                MemoryPersistence.addToMemory(finalSender, "user", originalMessage);
                 String effectivePersonality = channelType == ChatChannel.ChannelType.GUILD ? 
                     ModConfig.guildPersonality : ModConfig.personality;
                 String topicContext = TopicTracker.getTopicContext(finalSender);
@@ -262,13 +311,8 @@ public class ChatHandler {
                     System.err.println("[AI Chat] Error generating response: " + ex.getMessage());
                     return null;
                 });
-            }).exceptionally(ex -> {
-                ex.printStackTrace();
-                System.err.println("[AI Chat] Translation error: " + ex.getMessage());
-                return null;
-            });
-        }
     }
+    
     private String formatPrefix() {
         return "[AI] ";
     }

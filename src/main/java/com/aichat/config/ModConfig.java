@@ -43,9 +43,12 @@ public class ModConfig {
     public static boolean silentMode = false;
     public static boolean randomDelay = false;
     public static boolean typingDelay = true;
+    public static boolean scamDetection = true;
     public static boolean conversationStarters = false;
     public static boolean showConfidence = false;
     public static int rateLimitWarningPercent = 80;
+    public static boolean webSearch = true;
+    public static boolean sentimentAnalysis = true;
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static File configFile;
     public static void load(File configDir) {
@@ -93,9 +96,12 @@ public class ModConfig {
             if (json.has("silentMode")) silentMode = json.get("silentMode").getAsBoolean();
             if (json.has("randomDelay")) randomDelay = json.get("randomDelay").getAsBoolean();
             if (json.has("typingDelay")) typingDelay = json.get("typingDelay").getAsBoolean();
+            if (json.has("scamDetection")) scamDetection = json.get("scamDetection").getAsBoolean();
             if (json.has("conversationStarters")) conversationStarters = json.get("conversationStarters").getAsBoolean();
             if (json.has("showConfidence")) showConfidence = json.get("showConfidence").getAsBoolean();
             if (json.has("rateLimitWarningPercent")) rateLimitWarningPercent = json.get("rateLimitWarningPercent").getAsInt();
+            if (json.has("webSearch")) webSearch = json.get("webSearch").getAsBoolean();
+            if (json.has("sentimentAnalysis")) sentimentAnalysis = json.get("sentimentAnalysis").getAsBoolean();
             System.out.println("[AI Chat] Configuration loaded");
         } catch (Exception e) {
             System.err.println("[AI Chat] Error loading config: " + e.getMessage());
@@ -143,9 +149,12 @@ public class ModConfig {
             json.addProperty("silentMode", silentMode);
             json.addProperty("randomDelay", randomDelay);
             json.addProperty("typingDelay", typingDelay);
+            json.addProperty("scamDetection", scamDetection);
             json.addProperty("conversationStarters", conversationStarters);
             json.addProperty("showConfidence", showConfidence);
             json.addProperty("rateLimitWarningPercent", rateLimitWarningPercent);
+            json.addProperty("webSearch", webSearch);
+            json.addProperty("sentimentAnalysis", sentimentAnalysis);
             try (FileWriter writer = new FileWriter(configFile)) {
                 gson.toJson(json, writer);
             }

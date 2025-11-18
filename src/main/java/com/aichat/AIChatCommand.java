@@ -272,7 +272,9 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Core: " + EnumChatFormatting.GRAY + "aiservice, geminiapikey, maxwords, minwords"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Context: " + EnumChatFormatting.GRAY + "contextmessages, contexttimeout, remembercontext"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Features: " + EnumChatFormatting.GRAY + "emotiondetection, learning, chainlimit, starters, confidence"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Intelligence: " + EnumChatFormatting.GRAY + "websearch, sentimentanalysis"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Visual: " + EnumChatFormatting.GRAY + "streaming, streamingspeed, badges, randomdelay, typingdelay"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Security: " + EnumChatFormatting.GRAY + "scamdetection"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Translation: " + EnumChatFormatting.GRAY + "autotranslate, targetlanguage"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Limits: " + EnumChatFormatting.GRAY + "maxperhour, ratelimitwarning"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Example: /aichat set maxwords 50"));
@@ -756,6 +758,57 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Typing delay " + tdStatus));
                 if (ModConfig.typingDelay) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Responses will simulate realistic human typing speed"));
+                }
+                break;
+                
+            case "scamdetection":
+            case "scam":
+                if (args.length < 3) {
+                    String current = ModConfig.scamDetection ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Scam detection: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set scamdetection <true|false>"));
+                    return;
+                }
+                ModConfig.scamDetection = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String scamStatus = ModConfig.scamDetection ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Scam detection " + scamStatus));
+                if (ModConfig.scamDetection) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Will warn about suspicious links and phishing attempts"));
+                }
+                break;
+                
+            case "websearch":
+            case "search":
+                if (args.length < 3) {
+                    String current = ModConfig.webSearch ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Web search: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set websearch <true|false>"));
+                    return;
+                }
+                ModConfig.webSearch = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String searchStatus = ModConfig.webSearch ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Web search " + searchStatus));
+                if (ModConfig.webSearch) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI can search the web for real-time information"));
+                }
+                break;
+                
+            case "sentimentanalysis":
+            case "sentiment":
+                if (args.length < 3) {
+                    String current = ModConfig.sentimentAnalysis ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Sentiment analysis: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set sentimentanalysis <true|false>"));
+                    return;
+                }
+                ModConfig.sentimentAnalysis = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String sentimentStatus = ModConfig.sentimentAnalysis ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Sentiment analysis " + sentimentStatus));
+                if (ModConfig.sentimentAnalysis) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will adapt responses to your emotional tone"));
                 }
                 break;
                 
