@@ -1,5 +1,4 @@
 package com.aichat;
-
 import com.aichat.config.ModConfig;
 import com.aichat.features.RateLimitMonitor;
 import com.aichat.friends.FriendManager;
@@ -10,43 +9,35 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
-
 public class AIChatCommand extends CommandBase {
-    
     @Override
     public String getCommandName() {
         return "aichat";
     }
-    
     @Override
     public String getCommandUsage(ICommandSender sender) {
         return "/aichat <help|toggle|personality|delay|friend|guild|visual|set|addtrigger|removetrigger|listtriggers|config|stats|learn|afk>";
     }
-    
     @Override
     public int getRequiredPermissionLevel() {
         return 0;
     }
-    
     @Override
     public void processCommand(ICommandSender sender, String[] args) throws CommandException {
         if (args.length == 0) {
             showHelpMenu(sender);
             return;
         }
-        
         switch (args[0].toLowerCase()) {
             case "help":
                 showHelpMenu(sender);
                 break;
-                
             case "toggle":
                 ChatHandler.enabled = !ChatHandler.enabled;
                 String status = ChatHandler.enabled ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "AI responses are now " + status));
                 ModConfig.save();
                 break;
-                
             case "personality":
                 if (args.length < 2) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Current personality: " + EnumChatFormatting.YELLOW + ModConfig.personality));
@@ -64,7 +55,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid personality. Choose: friendly, sarcastic, professional, funny, casual, mocking"));
                 }
                 break;
-                
             case "addtrigger":
                 if (args.length < 2) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat addtrigger <text>"));
@@ -74,7 +64,6 @@ public class AIChatCommand extends CommandBase {
                 ChatHandler.customTriggers.add(addTrigger.toLowerCase());
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Added trigger: " + EnumChatFormatting.YELLOW + addTrigger));
                 break;
-                
             case "removetrigger":
                 if (args.length < 2) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat removetrigger <text>"));
@@ -87,7 +76,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Trigger not found: " + removeTrigger));
                 }
                 break;
-                
             case "listtriggers":
                 if (ChatHandler.customTriggers.isEmpty()) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "No custom triggers set."));
@@ -98,7 +86,6 @@ public class AIChatCommand extends CommandBase {
                     }
                 }
                 break;
-                
             case "delay":
                 if (args.length < 2) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Current response delay: " + EnumChatFormatting.YELLOW + ModConfig.cooldownSeconds + " seconds"));
@@ -121,23 +108,18 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number. Usage: /aichat delay <seconds>"));
                 }
                 break;
-                
             case "friend":
                 handleFriendCommand(sender, args);
                 break;
-                
             case "guild":
                 handleGuildCommand(sender, args);
                 break;
-                
             case "visual":
                 handleVisualCommand(sender, args);
                 break;
-                
             case "set":
                 handleSetCommand(sender, args);
                 break;
-                
             case "config":
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== AI Chat Configuration =========="));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "AI Service: " + EnumChatFormatting.YELLOW + ModConfig.aiService));
@@ -148,54 +130,43 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Auto-Translate: " + EnumChatFormatting.YELLOW + (ModConfig.autoTranslate ? "ON" : "OFF")));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Edit config at: config/aichat.json"));
                 break;
-                
             case "stats":
                 handleStatsCommand(sender, args);
                 break;
-                
             case "learn":
                 handleLearnCommand(sender, args);
                 break;
-                
             case "afk":
                 handleAFKCommand(sender, args);
                 break;
-                
             case "memory":
                 handleMemoryCommand(sender, args);
                 break;
-                
             case "convo":
             case "conversation":
                 handleConversationCommand(sender, args);
                 break;
-                
             case "party":
                 handlePartyCommand(sender, args);
                 break;
-                
             case "game":
                 handleGameCommand(sender, args);
                 break;
-                
             case "mute":
                 ChatHandler.enabled = false;
                 ModConfig.save();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.RED + "All AI responses muted"));
                 break;
-                
             case "unmute":
                 ChatHandler.enabled = true;
                 ModConfig.save();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.GREEN + "AI responses unmuted"));
                 break;
-                
             case "debug":
                 ChatHandler.debugMode = !ChatHandler.debugMode;
                 String debugStatus = ChatHandler.debugMode ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Debug mode " + debugStatus));
                 break;
-                
             case "silent":
                 ModConfig.silentMode = !ModConfig.silentMode;
                 ModConfig.save();
@@ -205,17 +176,14 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Thinking indicators and badges are now hidden"));
                 }
                 break;
-                
             case "testapi":
                 handleTestAPICommand(sender);
                 break;
-                
             case "ratelimitstatus":
             case "rlstatus":
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Rate Limit Status:"));
                 sender.addChatMessage(new ChatComponentText("  " + RateLimitMonitor.getStatusMessage()));
                 break;
-                
             case "emergency":
                 ChatHandler.enabled = false;
                 ChatHandler.debugMode = false;
@@ -225,13 +193,11 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "All AI responses disabled"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "Use /aichat unmute to re-enable"));
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown subcommand. Use /aichat help"));
                 break;
         }
     }
-    
     private void showHelpMenu(ICommandSender sender) {
         sender.addChatMessage(new ChatComponentText(""));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "==================================="));
@@ -315,7 +281,6 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.DARK_GRAY + "Config: config/aichat.json | Use /aichat help for this menu"));
         sender.addChatMessage(new ChatComponentText(""));
     }
-    
     private String joinArgs(String[] args, int start) {
         StringBuilder builder = new StringBuilder();
         for (int i = start; i < args.length; i++) {
@@ -324,13 +289,11 @@ public class AIChatCommand extends CommandBase {
         }
         return builder.toString();
     }
-    
     private void handleFriendCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat friend <add|remove|list|whitelist|autoaccept>"));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "add":
                 if (args.length < 3) {
@@ -340,7 +303,6 @@ public class AIChatCommand extends CommandBase {
                 FriendManager.addFriend(args[2]);
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Added friend: " + EnumChatFormatting.YELLOW + args[2]));
                 break;
-                
             case "remove":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat friend remove <player>"));
@@ -349,7 +311,6 @@ public class AIChatCommand extends CommandBase {
                 FriendManager.removeFriend(args[2]);
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Removed friend: " + EnumChatFormatting.YELLOW + args[2]));
                 break;
-                
             case "list":
                 if (FriendManager.getFriends().isEmpty()) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "No friends added."));
@@ -360,25 +321,21 @@ public class AIChatCommand extends CommandBase {
                     }
                 }
                 break;
-                
             case "whitelist":
                 FriendManager.setWhitelistMode(!FriendManager.isWhitelistMode());
                 String wlStatus = FriendManager.isWhitelistMode() ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Whitelist mode " + wlStatus));
                 break;
-                
             case "autoaccept":
                 FriendManager.setAutoAccept(!FriendManager.isAutoAccept());
                 String aaStatus = FriendManager.isAutoAccept() ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Auto-accept " + aaStatus));
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown option. Use: add, remove, list, whitelist, autoaccept"));
                 break;
         }
     }
-    
     private void handleGuildCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] Guild Settings:"));
@@ -387,7 +344,6 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Requires Mention: " + EnumChatFormatting.YELLOW + ModConfig.guildRequiresMention));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "toggle":
                 ModConfig.guildChatEnabled = !ModConfig.guildChatEnabled;
@@ -395,7 +351,6 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Guild chat " + status));
                 ModConfig.save();
                 break;
-                
             case "personality":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Current guild personality: " + EnumChatFormatting.YELLOW + ModConfig.guildPersonality));
@@ -405,27 +360,23 @@ public class AIChatCommand extends CommandBase {
                 ModConfig.save();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Guild personality set to: " + EnumChatFormatting.YELLOW + args[2]));
                 break;
-                
             case "mention":
                 ModConfig.guildRequiresMention = !ModConfig.guildRequiresMention;
                 String mentionStatus = ModConfig.guildRequiresMention ? EnumChatFormatting.GREEN + "required" : EnumChatFormatting.RED + "not required";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Mention in guild " + mentionStatus));
                 ModConfig.save();
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat guild <toggle|personality|mention>"));
                 break;
         }
     }
-    
     private void handleVisualCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] Visual Settings:"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Show Thinking: " + EnumChatFormatting.YELLOW + ModConfig.showThinking));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "thinking":
                 ModConfig.showThinking = !ModConfig.showThinking;
@@ -433,13 +384,11 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Thinking indicator " + thinkStatus));
                 ModConfig.save();
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat visual thinking"));
                 break;
         }
     }
-    
     private void handleSetCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] Editable Settings:"));
@@ -458,9 +407,7 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set <setting> <value>"));
             return;
         }
-        
         String setting = args[1].toLowerCase();
-        
         switch (setting) {
             case "maxwords":
                 if (args.length < 3) {
@@ -480,7 +427,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "minwords":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set minwords <number>"));
@@ -499,7 +445,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "contextmessages":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set contextmessages <number>"));
@@ -518,7 +463,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "contexttimeout":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set contexttimeout <minutes>"));
@@ -537,7 +481,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "remembercontext":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set remembercontext <true|false>"));
@@ -552,7 +495,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
                 }
                 break;
-                
             case "maxperhour":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set maxperhour <number>"));
@@ -571,7 +513,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "aiservice":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set aiservice <gemini|ollama|openai|claude>"));
@@ -587,7 +528,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid service. Use: gemini, ollama, openai, or claude"));
                 }
                 break;
-                
             case "geminiapikey":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set geminiApiKey <key>"));
@@ -605,7 +545,6 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "You can now use Gemini AI for free!"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Note: Restart required for this change to take effect"));
                 break;
-                
             case "autotranslate":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set autotranslate <true|false>"));
@@ -620,7 +559,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
                 }
                 break;
-                
             case "targetlanguage":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set targetlanguage <code>"));
@@ -636,7 +574,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Language code must be 2 characters (ISO 639-1)"));
                 }
                 break;
-                
             case "streaming":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set streaming <true|false>"));
@@ -651,7 +588,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
                 }
                 break;
-                
             case "badges":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set badges <true|false>"));
@@ -666,7 +602,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
                 }
                 break;
-                
             case "emotiondetection":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set emotiondetection <true|false>"));
@@ -681,7 +616,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
                 }
                 break;
-                
             case "chainlimit":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set chainlimit <number>"));
@@ -701,7 +635,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "learning":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set learning <true|false>"));
@@ -716,7 +649,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
                 }
                 break;
-                
             case "streamingspeed":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set streamingspeed <number>"));
@@ -736,7 +668,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             case "randomdelay":
                 if (args.length < 3) {
                     String current = ModConfig.randomDelay ? "enabled" : "disabled";
@@ -752,7 +683,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Responses will have 0-2 second random delay for natural timing"));
                 }
                 break;
-                
             case "starters":
             case "conversationstarters":
                 if (args.length < 3) {
@@ -769,7 +699,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will proactively greet players and initiate conversations"));
                 }
                 break;
-                
             case "confidence":
             case "showconfidence":
                 if (args.length < 3) {
@@ -786,7 +715,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will show confidence level with each response"));
                 }
                 break;
-                
             case "ratelimitwarning":
             case "rlwarning":
                 if (args.length < 3) {
@@ -813,15 +741,12 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number. Usage: /aichat set ratelimitwarning <percent>"));
                 }
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown setting. Use /aichat set to see available settings"));
                 break;
         }
     }
-    
     private void handleStatsCommand(ICommandSender sender, String[] args) {
-
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== AI Chat Statistics =========="));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Total Responses: " + EnumChatFormatting.YELLOW + "0"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Failed Responses: " + EnumChatFormatting.YELLOW + "0"));
@@ -831,26 +756,21 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Slowest Response: " + EnumChatFormatting.YELLOW + "0ms"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Note: Statistics reset on restart"));
     }
-    
     private void handleLearnCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat learn <key> <value>"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Example: /aichat learn server Hypixel"));
             return;
         }
-        
         if (args.length < 3) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat learn <key> <value>"));
             return;
         }
-        
         String key = args[1];
         String value = joinArgs(args, 2);
-
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Learned: " + EnumChatFormatting.YELLOW + key + " = " + value));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will remember this fact in future conversations"));
     }
-    
     private void handleAFKCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] AFK Status:"));
@@ -859,20 +779,16 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "AFK Threshold: " + EnumChatFormatting.YELLOW + ModConfig.afkThresholdMinutes + " minutes"));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "toggle":
-
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "AFK mode toggled"));
                 break;
-                
             case "auto":
                 ModConfig.autoAFK = !ModConfig.autoAFK;
                 ModConfig.save();
                 String status = ModConfig.autoAFK ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Auto-AFK " + status));
                 break;
-                
             case "time":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat afk time <minutes>"));
@@ -891,13 +807,11 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
                 }
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat afk <toggle|auto|time>"));
                 break;
         }
     }
-    
     private void handleMemoryCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] Memory Commands:"));
@@ -906,13 +820,11 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " /aichat memory stats " + EnumChatFormatting.GRAY + "- View memory statistics"));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "save":
                 com.aichat.context.MemoryPersistence.saveMemory();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Memory saved to config/memory.json"));
                 break;
-                
             case "clear":
                 if (args.length > 2) {
                     String player = args[2];
@@ -923,7 +835,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Cleared all memory"));
                 }
                 break;
-                
             case "stats":
                 java.util.Map<String, Integer> stats = com.aichat.context.MemoryPersistence.getMemoryStats();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== Memory Statistics =========="));
@@ -943,35 +854,29 @@ public class AIChatCommand extends CommandBase {
                         });
                 }
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat memory <save|clear|stats>"));
                 break;
         }
     }
-    
     private void handleConversationCommand(ICommandSender sender, String[] args) {
         java.util.Map<String, Long> windows = com.aichat.context.ConversationWindow.getActiveWindows();
-        
         if (windows.isEmpty()) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.GRAY + "No active conversation windows"));
             return;
         }
-        
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== Active Conversations =========="));
         for (java.util.Map.Entry<String, Long> entry : windows.entrySet()) {
             long remaining = com.aichat.context.ConversationWindow.getTimeRemaining(entry.getKey());
             long seconds = remaining / 1000;
             long minutes = seconds / 60;
             seconds = seconds % 60;
-            
             sender.addChatMessage(new ChatComponentText(
                 EnumChatFormatting.YELLOW + entry.getKey() + EnumChatFormatting.GRAY + " - " + 
                 EnumChatFormatting.WHITE + minutes + "m " + seconds + "s remaining"
             ));
         }
     }
-    
     private void handlePartyCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] Party Commands:"));
@@ -983,7 +888,6 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " /aichat party autoinvite <true|false> " + EnumChatFormatting.GRAY + "- Toggle AI auto-invite"));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "status":
                 if (!PartyManager.isInParty()) {
@@ -998,7 +902,6 @@ public class AIChatCommand extends CommandBase {
                     }
                 }
                 break;
-                
             case "invite":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat party invite <player>"));
@@ -1007,7 +910,6 @@ public class AIChatCommand extends CommandBase {
                 PartyManager.invitePlayer(args[2]);
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Invited " + EnumChatFormatting.YELLOW + args[2] + EnumChatFormatting.WHITE + " to party"));
                 break;
-                
             case "kick":
                 if (args.length < 3) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat party kick <player>"));
@@ -1020,7 +922,6 @@ public class AIChatCommand extends CommandBase {
                 PartyManager.kickPlayer(args[2]);
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Kicked " + EnumChatFormatting.YELLOW + args[2] + EnumChatFormatting.WHITE + " from party"));
                 break;
-                
             case "warp":
                 if (!PartyManager.isPartyLeader()) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You must be party leader to warp the party"));
@@ -1033,12 +934,10 @@ public class AIChatCommand extends CommandBase {
                 PartyManager.warpParty();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Warping party to your lobby"));
                 break;
-                
             case "leave":
                 PartyManager.leaveParty();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Left party"));
                 break;
-                
             case "autoinvite":
                 if (args.length < 3) {
                     String status = ModConfig.autoInviteToParty ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
@@ -1050,13 +949,11 @@ public class AIChatCommand extends CommandBase {
                 String status = ModConfig.autoInviteToParty ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Auto-invite " + status));
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat party <status|invite|kick|warp|leave|autoinvite>"));
                 break;
         }
     }
-    
     private void handleGameCommand(ICommandSender sender, String[] args) {
         if (args.length < 2) {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] Game Commands:"));
@@ -1068,7 +965,6 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " /aichat game togglewarp " + EnumChatFormatting.GRAY + "- Toggle AI /p warp permission"));
             return;
         }
-        
         switch (args[1].toLowerCase()) {
             case "play":
                 if (args.length < 3) {
@@ -1084,12 +980,10 @@ public class AIChatCommand extends CommandBase {
                 GameActionManager.playGame(mode);
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Joining " + EnumChatFormatting.YELLOW + mode));
                 break;
-                
             case "lobby":
                 GameActionManager.goToLobby();
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Returning to lobby"));
                 break;
-                
             case "list":
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== Available Game Modes =========="));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Use /aichat game play <mode> to join:"));
@@ -1098,76 +992,67 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " - " + game));
                 }
                 break;
-                
             case "toggleplay":
                 ModConfig.allowPlayCommand = !ModConfig.allowPlayCommand;
                 ModConfig.save();
                 String playStatus = ModConfig.allowPlayCommand ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "AI /play command " + playStatus));
                 break;
-                
             case "togglelobby":
                 ModConfig.allowLobbyCommand = !ModConfig.allowLobbyCommand;
                 ModConfig.save();
                 String lobbyStatus = ModConfig.allowLobbyCommand ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "AI /lobby command " + lobbyStatus));
                 break;
-                
             case "togglewarp":
                 ModConfig.allowWarpCommand = !ModConfig.allowWarpCommand;
                 ModConfig.save();
                 String warpStatus = ModConfig.allowWarpCommand ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "AI /p warp command " + warpStatus));
                 break;
-                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat game <play|lobby|list|toggleplay|togglelobby|togglewarp>"));
                 break;
         }
     }
-    
     private void handleTestAPICommand(ICommandSender sender) {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Testing API connection..."));
-        
         String service = ModConfig.aiService.toLowerCase();
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Service: " + service));
-        
         if (service.equals("gemini")) {
             if (ModConfig.geminiApiKey.equals("your-api-key-here") || ModConfig.geminiApiKey.isEmpty()) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "✗ Gemini API key not configured"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— Gemini API key not configured"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json or use /aichat set geminiapikey <key>"));
             } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "✓ Gemini API key is set"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "âœ“ Gemini API key is set"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
             }
         } else if (service.equals("openai")) {
             if (ModConfig.openaiApiKey.equals("your-api-key-here") || ModConfig.openaiApiKey.isEmpty()) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "✗ OpenAI API key not configured"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— OpenAI API key not configured"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json"));
             } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "✓ OpenAI API key is set"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "âœ“ OpenAI API key is set"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Model: " + ModConfig.openaiModel));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
             }
         } else if (service.equals("claude")) {
             if (ModConfig.claudeApiKey.equals("your-api-key-here") || ModConfig.claudeApiKey.isEmpty()) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "✗ Claude API key not configured"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— Claude API key not configured"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json"));
             } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "✓ Claude API key is set"));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "âœ“ Claude API key is set"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Model: " + ModConfig.claudeModel));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
             }
         } else if (service.equals("ollama")) {
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "⚠ Ollama runs locally - no API key needed"));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "âš  Ollama runs locally - no API key needed"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Make sure Ollama is running on localhost:11434"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
         } else {
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "✗ Unknown AI service: " + service));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— Unknown AI service: " + service));
         }
-        
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Current personality: " + ModConfig.personality));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Max response words: " + ModConfig.maxResponseWords));
     }
 }
-

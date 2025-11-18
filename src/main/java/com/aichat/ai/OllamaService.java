@@ -1,10 +1,8 @@
 package com.aichat.ai;
-
 import com.aichat.config.ModConfig;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -14,14 +12,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 public class OllamaService implements AIService {
-    
     private static final ExecutorService executor = Executors.newCachedThreadPool();
     private String apiUrl = "http://localhost:11434/api/generate";
-    
     @Override
-    public CompletableFuture<String> generateResponse(String message, List<ChatMessage> context, String personality, int maxLength) {
+    public CompletableFuture<String> generateResponse(String message, List<ChatMessage> context, String personality, int maxLength, String username) {
         return CompletableFuture.supplyAsync(() -> {
             try {
                 URL url = new URL(apiUrl);
@@ -31,19 +26,15 @@ public class OllamaService implements AIService {
                 conn.setDoOutput(true);
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(30000);
-                
-                JsonObject requestBody = buildRequestBody(message, context, personality, maxLength);
-                
+                JsonObject requestBody = buildRequestBody(message, context, personality, maxLength, username);
                 try (OutputStream os = conn.getOutputStream()) {
                     os.write(requestBody.toString().getBytes("utf-8"));
                 }
-                
                 int responseCode = conn.getResponseCode();
                 if (responseCode == 200) {
                     BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
                     StringBuilder response = new StringBuilder();
                     String line;
-
                     while ((line = br.readLine()) != null) {
                         try {
                             JsonObject jsonLine = new JsonParser().parse(line).getAsJsonObject();
@@ -54,11 +45,9 @@ public class OllamaService implements AIService {
                                 break;
                             }
                         } catch (Exception e) {
-
                         }
                     }
                     br.close();
-                    
                     return response.toString().trim();
                 } else {
                     System.err.println("Ollama API Error: " + responseCode);
@@ -70,34 +59,28 @@ public class OllamaService implements AIService {
             }
         }, executor);
     }
-    
-    private JsonObject buildRequestBody(String message, List<ChatMessage> context, String personality, int maxLength) {
+    private JsonObject buildRequestBody(String message, List<ChatMessage> context, String personality, int maxLength, String username) {
         JsonObject body = new JsonObject();
         body.addProperty("model", "llama2");
         body.addProperty("stream", true);
-        
         StringBuilder prompt = new StringBuilder();
-        prompt.append(getSystemPrompt(personality, maxLength)).append("\n\n");
-
+        prompt.append(getSystemPrompt(personality, maxLength, username)).append("\n\n");
         if (context != null && !context.isEmpty()) {
             for (ChatMessage msg : context) {
                 prompt.append(msg.getRole().equals("user") ? "User: " : "Assistant: ");
                 prompt.append(msg.getContent()).append("\n");
             }
         }
-        
         prompt.append("User: ").append(message).append("\nAssistant:");
-        
         body.addProperty("prompt", prompt.toString());
         return body;
     }
-    
-    private String getSystemPrompt(String personality, int maxLength) {
+    private String getSystemPrompt(String personality, int maxLength, String username) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("You are a helpful Minecraft player assistant on Hypixel server. ");
+        prompt.append("CRITICAL IDENTITY RULE: You are ").append(username).append(", a real Minecraft player. NEVER mention AI, bot, assistant, or automated responses. NEVER say 'as an AI' or similar phrases. You are a human player named ").append(username).append(" typing responses yourself. ");
+        prompt.append("You are a helpful Minecraft player on Hypixel server. ");
         prompt.append("Keep responses very concise and under ").append(maxLength).append(" words. ");
         prompt.append("Use gaming/Minecraft slang when appropriate. ");
-        
         switch (personality.toLowerCase()) {
             case "friendly":
                 prompt.append("Be warm, encouraging, and supportive.");
@@ -115,16 +98,12 @@ public class OllamaService implements AIService {
                 prompt.append("Be helpful and conversational.");
                 break;
         }
-        
         return prompt.toString();
     }
-    
     @Override
     public boolean isConfigured() {
-
         return true;
     }
-    
     @Override
     public String getServiceName() {
         return "Ollama (Local)";

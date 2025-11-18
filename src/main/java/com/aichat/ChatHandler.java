@@ -1,5 +1,4 @@
 package com.aichat;
-
 import com.aichat.ai.AIService;
 import com.aichat.ai.ClaudeService;
 import com.aichat.ai.GeminiService;
@@ -29,28 +28,21 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 public class ChatHandler {
-    
     public static boolean enabled = true;
     public static boolean debugMode = false;
     public static Set<String> customTriggers = new HashSet<>();
-    
     private long lastResponseTime = 0;
     private int responsesThisHour = 0;
     private long hourStartTime = System.currentTimeMillis();
     private long lastDecayTime = System.currentTimeMillis();
-    
     private final AIService aiService;
-    
     public ChatHandler() {
         MemoryPersistence.loadMemory();
-
         String service = ModConfig.aiService.toLowerCase();
         if (service.equals("claude")) {
             this.aiService = new ClaudeService();
@@ -62,24 +54,19 @@ public class ChatHandler {
             this.aiService = new GeminiService();
         }
     }
-    
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
         if (!enabled) return;
-        
         if (System.currentTimeMillis() - lastDecayTime > 60000) {
             SmartInvites.decayScores();
             lastDecayTime = System.currentTimeMillis();
         }
-        
         String message = event.message.getUnformattedText();
         String username = Minecraft.getMinecraft().getSession().getUsername();
-
         ChatParser.GameEvent gameEvent = ChatParser.parseGameEvent(message);
         if (gameEvent != null && ModConfig.personality.equals("mocking")) {
             handleGameEvent(gameEvent, username);
         }
-
         ChatChannel channel = ChatParser.parseMessage(message);
         if (channel == null) {
             if (debugMode) {
@@ -89,21 +76,17 @@ public class ChatHandler {
             }
             return;
         }
-        
         String sender = channel.getSender();
         String content = channel.getContent();
         ChatChannel.ChannelType channelType = channel.getType();
-        
         if (sender != null) {
             ConversationStarter.trackPlayerActivity(sender);
         }
-        
         if (debugMode) {
             Minecraft.getMinecraft().thePlayer.addChatMessage(
                 new ChatComponentText(EnumChatFormatting.DARK_GRAY + "[DEBUG] Parsed - Channel: " + channelType + ", Sender: " + sender)
             );
         }
-
         if (sender != null && sender.equalsIgnoreCase(username)) {
             if (debugMode) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
@@ -112,7 +95,6 @@ public class ChatHandler {
             }
             return;
         }
-
         if (SpamDetector.isSpam(sender, content)) {
             if (debugMode) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
@@ -121,7 +103,6 @@ public class ChatHandler {
             }
             return;
         }
-
         if (channelType == ChatChannel.ChannelType.GUILD) {
             if (!ModConfig.guildChatEnabled) {
                 if (debugMode) {
@@ -131,7 +112,6 @@ public class ChatHandler {
                 }
                 return;
             }
-
             if (ModConfig.guildRequiresMention && !content.toLowerCase().contains(username.toLowerCase())) {
                 if (debugMode) {
                     Minecraft.getMinecraft().thePlayer.addChatMessage(
@@ -140,9 +120,7 @@ public class ChatHandler {
                 }
                 return;
             }
-
         }
-
         if (FriendManager.isWhitelistMode() && !FriendManager.isFriend(sender)) {
             if (debugMode) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
@@ -151,9 +129,7 @@ public class ChatHandler {
             }
             return;
         }
-
         if (content != null && shouldRespond(content, username, sender, channelType)) {
-
             long currentTime = System.currentTimeMillis();
             long cooldownMillis = ModConfig.cooldownSeconds * 1000L;
             if (currentTime - lastResponseTime < cooldownMillis) {
@@ -165,7 +141,6 @@ public class ChatHandler {
                 }
                 return;
             }
-
             if (currentTime - hourStartTime > 3600000) {
                 hourStartTime = currentTime;
                 responsesThisHour = 0;
@@ -179,10 +154,8 @@ public class ChatHandler {
                 }
                 return;
             }
-            
             SmartInvites.analyzeMessage(sender, content);
             PartyLeaderAssistant.onMemberActivity(sender);
-            
             if (ModConfig.randomDelay) {
                 long randomDelayMs = (long)(Math.random() * 2000);
                 lastResponseTime = currentTime + randomDelayMs;
@@ -190,43 +163,32 @@ public class ChatHandler {
                 lastResponseTime = currentTime;
             }
             responsesThisHour++;
-            
             RateLimitMonitor.trackResponse();
-            
             final String finalSender = sender;
             final String finalContent = content;
             final ChatChannel finalChannel = channel;
-            
             if (debugMode) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
                     new ChatComponentText(EnumChatFormatting.DARK_GRAY + "[DEBUG] Generating response for " + finalSender + " in " + channelType)
                 );
             }
-
             if (ModConfig.showThinking && !ModConfig.silentMode) {
                 String thinkingMsg = ChatBadges.formatAIMessage("Thinking...", true);
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
                     new ChatComponentText(thinkingMsg)
                 );
             }
-            
             System.out.println("[AI Chat] Message detected from " + finalSender + " in " + channelType + ": " + finalContent);
-
             TopicTracker.analyzeAndTrack(finalSender, finalContent);
-
             TranslationService.autoTranslate(finalContent).thenAccept(translatedContent -> {
-
                 ConversationManager.addMessage(finalSender, "user", translatedContent);
                 MemoryPersistence.addToMemory(finalSender, "user", translatedContent);
-
                 String effectivePersonality = channelType == ChatChannel.ChannelType.GUILD ? 
                     ModConfig.guildPersonality : ModConfig.personality;
-
                 String topicContext = TopicTracker.getTopicContext(finalSender);
                 String variationPrompt = ResponseVariation.getVariationPrompt(finalSender);
                 String mockingEnhancement = effectivePersonality.equals("mocking") ? 
                     " Be extra harsh and critical. Mock their gameplay decisions and failures. Don't hold back on the roasts." : "";
-                
                 String partyLeaderContext = PartyLeaderAssistant.getContextPrompt();
                 String smartInviteContext = SmartInvites.getContextPrompt(finalSender);
                 String conversationStarterContext = ConversationStarter.getContextPrompt();
@@ -234,7 +196,6 @@ public class ChatHandler {
                 String partyLeaderSuggestion = PartyLeaderAssistant.checkForSuggestions();
                 String inviteSuggestion = SmartInvites.checkForInviteSuggestion(finalSender);
                 String conversationStarter = ConversationStarter.checkForStarter(finalSender);
-                
                 StringBuilder additionalContextBuilder = new StringBuilder();
                 additionalContextBuilder.append(partyLeaderContext).append(smartInviteContext)
                     .append(conversationStarterContext).append(confidencePrompt);
@@ -248,7 +209,6 @@ public class ChatHandler {
                     additionalContextBuilder.append("\n[CONVERSATION STARTER: Consider using this greeting: \"").append(conversationStarter).append("\"]");
                 }
                 final String additionalContext = additionalContextBuilder.toString();
-
                 if (!aiService.isConfigured() && !ModConfig.aiService.equals("ollama") && !ModConfig.aiService.equals("gemini")) {
                     Minecraft.getMinecraft().thePlayer.addChatMessage(
                         new ChatComponentText(
@@ -258,42 +218,34 @@ public class ChatHandler {
                     );
                     return;
                 }
-                
+                String myUsername = Minecraft.getMinecraft().getSession().getUsername();
                 RetryLogic.retryWithBackoff(() -> 
                     aiService.generateResponse(
                         translatedContent + topicContext + variationPrompt + mockingEnhancement + additionalContext,
                         ConversationManager.getContext(finalSender),
                         effectivePersonality,
-                        ModConfig.maxResponseWords
+                        ModConfig.maxResponseWords,
+                        myUsername
                     ), RetryLogic.getRandomFallback()
                 ).thenAccept(response -> {
                     if (response != null && !response.isEmpty()) {
-
                         if (ResponseVariation.isDuplicate(finalSender, response)) {
                             System.out.println("[AI Chat] Skipping duplicate response");
                             return;
                         }
-
                         ResponseVariation.addResponse(finalSender, response);
-
                         ConversationManager.addMessage(finalSender, "assistant", response);
                         MemoryPersistence.addToMemory(finalSender, "assistant", response);
                         MemoryPersistence.saveMemory();
-                        
                         ConversationWindow.extendWindow(finalSender);
-                        
                         SmartInvites.executeAutoInvite(finalSender);
-                        
                         String confidenceResponse = ConfidenceTracker.formatResponseWithConfidence(response);
-
                         String formattedResponse = finalChannel.formatResponse(confidenceResponse);
-
                         Minecraft.getMinecraft().addScheduledTask(() -> {
                             if (Minecraft.getMinecraft().thePlayer != null) {
                                 Minecraft.getMinecraft().thePlayer.sendChatMessage(formattedResponse);
                             }
                         });
-                        
                         System.out.println("[AI Chat] Responded to " + finalSender + " in " + channelType + ": " + formattedResponse);
                     }
                 }).exceptionally(ex -> {
@@ -308,48 +260,37 @@ public class ChatHandler {
             });
         }
     }
-    
     private String formatPrefix() {
         return "[AI] ";
     }
-    
     private boolean shouldRespond(String message, String username, String sender, ChatChannel.ChannelType channelType) {
-
         if (channelType == ChatChannel.ChannelType.GUILD) {
             return true;
         }
-        
         String lowerMessage = message.toLowerCase();
         String lowerUsername = username.toLowerCase();
-
         if (lowerMessage.contains(lowerUsername)) {
             ConversationWindow.openWindow(sender);
             return true;
         }
-        
         if (ConversationWindow.isWindowActive(sender)) {
             return true;
         }
-
         for (String trigger : customTriggers) {
             if (lowerMessage.contains(trigger)) {
                 return true;
             }
         }
-        
         return false;
     }
-    
     private void handleGameEvent(ChatParser.GameEvent event, String username) {
         String target = event.getPrimaryPlayer();
         if (target == null || target.equalsIgnoreCase(username)) {
             return;
         }
-        
         if (!ConversationWindow.isWindowActive(target)) {
             return;
         }
-        
         String mockResponse = "";
         switch (event.getType()) {
             case DEATH:
@@ -369,7 +310,6 @@ public class ChatHandler {
             case GAME_LOSS:
                 break;
         }
-        
         if (!mockResponse.isEmpty()) {
             final String finalMock = mockResponse;
             final String finalTarget = target;
@@ -380,7 +320,6 @@ public class ChatHandler {
             });
         }
     }
-    
     private String generateMockForDeath(String player) {
         String[] mockTemplates = {
             player + " LOL did you even try?",
