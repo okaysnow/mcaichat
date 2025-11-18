@@ -6,12 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 public class ModConfig {
-    public static String aiService = "gemini";
     public static String geminiApiKey = "your-api-key-here";
-    public static String openaiApiKey = "your-api-key-here";
-    public static String openaiModel = "gpt-3.5-turbo";
-    public static String claudeApiKey = "your-api-key-here";
-    public static String claudeModel = "claude-3-haiku-20240307";
     public static String personality = "friendly";
     public static int maxResponseWords = 20;
     public static int minResponseWords = 3;
@@ -59,12 +54,7 @@ public class ModConfig {
         }
         try (FileReader reader = new FileReader(configFile)) {
             JsonObject json = gson.fromJson(reader, JsonObject.class);
-            if (json.has("aiService")) aiService = json.get("aiService").getAsString();
             if (json.has("geminiApiKey")) geminiApiKey = json.get("geminiApiKey").getAsString();
-            if (json.has("openaiApiKey")) openaiApiKey = json.get("openaiApiKey").getAsString();
-            if (json.has("openaiModel")) openaiModel = json.get("openaiModel").getAsString();
-            if (json.has("claudeApiKey")) claudeApiKey = json.get("claudeApiKey").getAsString();
-            if (json.has("claudeModel")) claudeModel = json.get("claudeModel").getAsString();
             if (json.has("personality")) personality = json.get("personality").getAsString();
             if (json.has("maxResponseWords")) maxResponseWords = json.get("maxResponseWords").getAsInt();
             if (json.has("minResponseWords")) minResponseWords = json.get("minResponseWords").getAsInt();
@@ -112,12 +102,7 @@ public class ModConfig {
         try {
             configFile.getParentFile().mkdirs();
             JsonObject json = new JsonObject();
-            json.addProperty("aiService", aiService);
             json.addProperty("geminiApiKey", geminiApiKey);
-            json.addProperty("openaiApiKey", openaiApiKey);
-            json.addProperty("openaiModel", openaiModel);
-            json.addProperty("claudeApiKey", claudeApiKey);
-            json.addProperty("claudeModel", claudeModel);
             json.addProperty("personality", personality);
             json.addProperty("maxResponseWords", maxResponseWords);
             json.addProperty("minResponseWords", minResponseWords);

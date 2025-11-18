@@ -4,6 +4,7 @@ import com.aichat.features.RateLimitMonitor;
 import com.aichat.friends.FriendManager;
 import com.aichat.hypixel.PartyManager;
 import com.aichat.hypixel.GameActionManager;
+import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -122,7 +123,7 @@ public class AIChatCommand extends CommandBase {
                 break;
             case "config":
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== AI Chat Configuration =========="));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "AI Service: " + EnumChatFormatting.YELLOW + ModConfig.aiService));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Gemini API Key: " + EnumChatFormatting.YELLOW + (ModConfig.geminiApiKey.equals("your-api-key-here") ? "Not set" : "Configured")));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Personality: " + EnumChatFormatting.YELLOW + ModConfig.personality));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Max Words: " + EnumChatFormatting.YELLOW + ModConfig.maxResponseWords));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Response Delay: " + EnumChatFormatting.YELLOW + ModConfig.cooldownSeconds + "s"));
@@ -269,7 +270,7 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat listtriggers " + EnumChatFormatting.GRAY + "- View all triggers"));
         sender.addChatMessage(new ChatComponentText(""));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Configuration (/aichat set <option> <value>):"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Core: " + EnumChatFormatting.GRAY + "aiservice, geminiapikey, maxwords, minwords"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Core: " + EnumChatFormatting.GRAY + "geminiapikey, maxwords, minwords"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Context: " + EnumChatFormatting.GRAY + "contextmessages, contexttimeout, remembercontext"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Features: " + EnumChatFormatting.GRAY + "emotiondetection, learning, chainlimit, starters, confidence"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Intelligence: " + EnumChatFormatting.GRAY + "websearch, sentimentanalysis"));
@@ -400,7 +401,6 @@ public class AIChatCommand extends CommandBase {
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " contextTimeout " + EnumChatFormatting.GRAY + "- Context timeout mins (" + ModConfig.contextTimeoutMinutes + ")"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " rememberContext " + EnumChatFormatting.GRAY + "- Context memory (" + ModConfig.rememberContext + ")"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " maxPerHour " + EnumChatFormatting.GRAY + "- Max responses/hour (" + ModConfig.maxResponsesPerHour + ")"));
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " aiService " + EnumChatFormatting.GRAY + "- AI service (" + ModConfig.aiService + ")"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " geminiApiKey " + EnumChatFormatting.GRAY + "- Gemini API key (*****)"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " autoTranslate " + EnumChatFormatting.GRAY + "- Auto-translate (" + ModConfig.autoTranslate + ")"));
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + " targetLanguage " + EnumChatFormatting.GRAY + "- Target language (" + ModConfig.targetLanguage + ")"));
@@ -513,21 +513,6 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Max responses per hour set to: " + EnumChatFormatting.YELLOW + value));
                 } catch (NumberFormatException e) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number"));
-                }
-                break;
-            case "aiservice":
-                if (args.length < 3) {
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Usage: /aichat set aiservice <gemini|ollama|openai|claude>"));
-                    return;
-                }
-                String service = args[2].toLowerCase();
-                if (service.equals("gemini") || service.equals("ollama") || service.equals("openai") || service.equals("claude")) {
-                    ModConfig.aiService = service;
-                    ModConfig.save();
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "AI service set to: " + EnumChatFormatting.YELLOW + service));
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Note: Restart required for this change to take effect"));
-                } else {
-                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid service. Use: gemini, ollama, openai, or claude"));
                 }
                 break;
             case "geminiapikey":
@@ -1087,43 +1072,45 @@ public class AIChatCommand extends CommandBase {
         }
     }
     private void handleTestAPICommand(ICommandSender sender) {
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Testing API connection..."));
-        String service = ModConfig.aiService.toLowerCase();
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Service: " + service));
-        if (service.equals("gemini")) {
-            if (ModConfig.geminiApiKey.equals("your-api-key-here") || ModConfig.geminiApiKey.isEmpty()) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— Gemini API key not configured"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json or use /aichat set geminiapikey <key>"));
-            } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "âœ“ Gemini API key is set"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
-            }
-        } else if (service.equals("openai")) {
-            if (ModConfig.openaiApiKey.equals("your-api-key-here") || ModConfig.openaiApiKey.isEmpty()) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— OpenAI API key not configured"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json"));
-            } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "âœ“ OpenAI API key is set"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Model: " + ModConfig.openaiModel));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
-            }
-        } else if (service.equals("claude")) {
-            if (ModConfig.claudeApiKey.equals("your-api-key-here") || ModConfig.claudeApiKey.isEmpty()) {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— Claude API key not configured"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json"));
-            } else {
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "âœ“ Claude API key is set"));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Model: " + ModConfig.claudeModel));
-                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
-            }
-        } else if (service.equals("ollama")) {
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "âš  Ollama runs locally - no API key needed"));
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Make sure Ollama is running on localhost:11434"));
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Send a test message to verify connection"));
-        } else {
-            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "âœ— Unknown AI service: " + service));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Testing Gemini API..."));
+        
+        if (ModConfig.geminiApiKey.equals("your-api-key-here") || ModConfig.geminiApiKey.isEmpty()) {
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "X Gemini API key not configured"));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Set in config/aichat.json or use /aichat set geminiapikey <key>"));
+            return;
         }
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Current personality: " + ModConfig.personality));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Max response words: " + ModConfig.maxResponseWords));
+        
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Sending test request..."));
+        
+        new Thread(() -> {
+            try {
+                com.aichat.ai.GeminiService testService = new com.aichat.ai.GeminiService();
+                testService.generateResponse("Say test successful if you can read this", new java.util.ArrayList<>(), ModConfig.personality, 20, "System").thenAccept(testResponse -> {
+                    Minecraft.getMinecraft().addScheduledTask(() -> {
+                        if (testResponse != null && !testResponse.isEmpty()) {
+                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "Gemini API is working!"));
+                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Response: " + EnumChatFormatting.WHITE + testResponse));
+                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Personality: " + ModConfig.personality + " | Max words: " + ModConfig.maxResponseWords));
+                        } else {
+                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "X API test failed - no response"));
+                            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Check your API key and internet connection"));
+                        }
+                    });
+                }).exceptionally(e -> {
+                    Minecraft.getMinecraft().addScheduledTask(() -> {
+                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "X API test failed: " + e.getMessage()));
+                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Check console for details"));
+                    });
+                    e.printStackTrace();
+                    return null;
+                });
+            } catch (Exception e) {
+                Minecraft.getMinecraft().addScheduledTask(() -> {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "X API test failed: " + e.getMessage()));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Check console for details"));
+                });
+                e.printStackTrace();
+            }
+        }).start();
     }
 }

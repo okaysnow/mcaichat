@@ -1,9 +1,6 @@
 package com.aichat;
 import com.aichat.ai.AIService;
-import com.aichat.ai.ClaudeService;
 import com.aichat.ai.GeminiService;
-import com.aichat.ai.OllamaService;
-import com.aichat.ai.OpenAIService;
 import com.aichat.chat.ChatChannel;
 import com.aichat.chat.ChatParser;
 import com.aichat.config.ModConfig;
@@ -47,16 +44,7 @@ public class ChatHandler {
     private final AIService aiService;
     public ChatHandler() {
         MemoryPersistence.loadMemory();
-        String service = ModConfig.aiService.toLowerCase();
-        if (service.equals("claude")) {
-            this.aiService = new ClaudeService();
-        } else if (service.equals("ollama")) {
-            this.aiService = new OllamaService();
-        } else if (service.equals("openai")) {
-            this.aiService = new OpenAIService();
-        } else {
-            this.aiService = new GeminiService();
-        }
+        this.aiService = new GeminiService();
     }
     @SubscribeEvent
     public void onChatReceived(ClientChatReceivedEvent event) {
@@ -259,11 +247,11 @@ public class ChatHandler {
                     additionalContextBuilder.append("\n[CONVERSATION STARTER: Consider using this greeting: \"").append(conversationStarter).append("\"]");
                 }
                 final String additionalContext = additionalContextBuilder.toString();
-                if (!aiService.isConfigured() && !ModConfig.aiService.equals("ollama") && !ModConfig.aiService.equals("gemini")) {
+                if (!aiService.isConfigured()) {
                     Minecraft.getMinecraft().thePlayer.addChatMessage(
                         new ChatComponentText(
                             ChatBadges.formatMessage(ChatBadges.BadgeType.ERROR,
-                            EnumChatFormatting.RED + "Not configured. Please set your API key in config/aichat.json")
+                            EnumChatFormatting.RED + "Gemini API key not configured. Set in config/aichat.json")
                         )
                     );
                     return;
