@@ -42,6 +42,7 @@ public class ModConfig {
     public static boolean autoInviteToParty = false;
     public static boolean silentMode = false;
     public static boolean randomDelay = false;
+    public static boolean typingDelay = true;
     public static boolean conversationStarters = false;
     public static boolean showConfidence = false;
     public static int rateLimitWarningPercent = 80;
@@ -91,6 +92,7 @@ public class ModConfig {
             if (json.has("autoInviteToParty")) autoInviteToParty = json.get("autoInviteToParty").getAsBoolean();
             if (json.has("silentMode")) silentMode = json.get("silentMode").getAsBoolean();
             if (json.has("randomDelay")) randomDelay = json.get("randomDelay").getAsBoolean();
+            if (json.has("typingDelay")) typingDelay = json.get("typingDelay").getAsBoolean();
             if (json.has("conversationStarters")) conversationStarters = json.get("conversationStarters").getAsBoolean();
             if (json.has("showConfidence")) showConfidence = json.get("showConfidence").getAsBoolean();
             if (json.has("rateLimitWarningPercent")) rateLimitWarningPercent = json.get("rateLimitWarningPercent").getAsInt();
@@ -140,6 +142,7 @@ public class ModConfig {
             json.addProperty("autoInviteToParty", autoInviteToParty);
             json.addProperty("silentMode", silentMode);
             json.addProperty("randomDelay", randomDelay);
+            json.addProperty("typingDelay", typingDelay);
             json.addProperty("conversationStarters", conversationStarters);
             json.addProperty("showConfidence", showConfidence);
             json.addProperty("rateLimitWarningPercent", rateLimitWarningPercent);

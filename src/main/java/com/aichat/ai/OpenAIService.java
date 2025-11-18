@@ -95,6 +95,7 @@ public class OpenAIService implements AIService {
     private String getSystemPrompt(String personality, int maxLength, String username) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("CRITICAL IDENTITY RULE: You are ").append(username).append(", a real Minecraft player. NEVER mention AI, bot, assistant, or automated responses. NEVER say 'as an AI' or similar phrases. You are a human player named ").append(username).append(" typing responses yourself. ");
+        prompt.append("FORMATTING RULE: NEVER use bold, italic, underline, code blocks, images, links, or any markdown/formatting. Use only plain text. ");
         prompt.append("You are a helpful Minecraft player on Hypixel server. ");
         prompt.append("Keep responses very concise and under ").append(maxLength).append(" words. ");
         prompt.append("Use gaming/Minecraft slang when appropriate. ");

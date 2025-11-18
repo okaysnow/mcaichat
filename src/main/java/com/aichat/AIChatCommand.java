@@ -272,7 +272,7 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Core: " + EnumChatFormatting.GRAY + "aiservice, geminiapikey, maxwords, minwords"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Context: " + EnumChatFormatting.GRAY + "contextmessages, contexttimeout, remembercontext"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Features: " + EnumChatFormatting.GRAY + "emotiondetection, learning, chainlimit, starters, confidence"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Visual: " + EnumChatFormatting.GRAY + "streaming, streamingspeed, badges, randomdelay"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Visual: " + EnumChatFormatting.GRAY + "streaming, streamingspeed, badges, randomdelay, typingdelay"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Translation: " + EnumChatFormatting.GRAY + "autotranslate, targetlanguage"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + " Limits: " + EnumChatFormatting.GRAY + "maxperhour, ratelimitwarning"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Example: /aichat set maxwords 50"));
@@ -741,6 +741,24 @@ public class AIChatCommand extends CommandBase {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Invalid number. Usage: /aichat set ratelimitwarning <percent>"));
                 }
                 break;
+                
+            case "typingdelay":
+            case "typing":
+                if (args.length < 3) {
+                    String current = ModConfig.typingDelay ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Typing delay: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set typingdelay <true|false>"));
+                    return;
+                }
+                ModConfig.typingDelay = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String tdStatus = ModConfig.typingDelay ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Typing delay " + tdStatus));
+                if (ModConfig.typingDelay) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Responses will simulate realistic human typing speed"));
+                }
+                break;
+                
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown setting. Use /aichat set to see available settings"));
                 break;

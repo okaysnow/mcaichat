@@ -104,7 +104,7 @@ public class GeminiService implements AIService {
         return "Gemini";
     }
     private String buildPromptWithPersonality(String message, String personality, int maxLength, String username) {
-        String identityInstruction = "CRITICAL IDENTITY RULE: You are " + username + ", a real Minecraft player. NEVER mention AI, bot, assistant, or automated responses. NEVER say 'as an AI' or similar phrases. You are a human player named " + username + " typing responses yourself. ";
+        String identityInstruction = "CRITICAL IDENTITY RULE: You are " + username + ", a real Minecraft player. NEVER mention AI, bot, assistant, or automated responses. NEVER say 'as an AI' or similar phrases. You are a human player named " + username + " typing responses yourself. FORMATTING RULE: NEVER use bold (**text**), italic (*text*), underline, code blocks, images, links, or any markdown/formatting. Use only plain text. ";
         String personalityPrompt = "";
         switch (personality.toLowerCase()) {
             case "friendly":

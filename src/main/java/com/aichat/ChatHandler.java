@@ -14,6 +14,7 @@ import com.aichat.context.TopicTracker;
 import com.aichat.features.ConfidenceTracker;
 import com.aichat.features.ConversationStarter;
 import com.aichat.features.RateLimitMonitor;
+import com.aichat.features.TypingSimulator;
 import com.aichat.friends.FriendManager;
 import com.aichat.hypixel.PartyLeaderAssistant;
 import com.aichat.hypixel.SmartInvites;
@@ -240,7 +241,15 @@ public class ChatHandler {
                         ConversationWindow.extendWindow(finalSender);
                         SmartInvites.executeAutoInvite(finalSender);
                         String confidenceResponse = ConfidenceTracker.formatResponseWithConfidence(response);
-                        String formattedResponse = finalChannel.formatResponse(confidenceResponse);
+                        String hypixelSafeResponse = TypingSimulator.formatHypixelSafe(confidenceResponse);
+                        String formattedResponse = finalChannel.formatResponse(hypixelSafeResponse);
+                        long typingDelay = TypingSimulator.calculateTypingDelay(hypixelSafeResponse);
+                        if (typingDelay > 0) {
+                            try {
+                                Thread.sleep(typingDelay);
+                            } catch (InterruptedException e) {
+                            }
+                        }
                         Minecraft.getMinecraft().addScheduledTask(() -> {
                             if (Minecraft.getMinecraft().thePlayer != null) {
                                 Minecraft.getMinecraft().thePlayer.sendChatMessage(formattedResponse);
