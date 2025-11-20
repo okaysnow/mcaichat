@@ -8,6 +8,7 @@ import java.io.FileWriter;
 public class ModConfig {
     public static String geminiApiKey = "your-api-key-here";
     public static String personality = "friendly";
+    public static String customUsername = null;
     public static int maxResponseWords = 20;
     public static int minResponseWords = 3;
     public static int maxContextMessages = 10;
@@ -31,9 +32,9 @@ public class ModConfig {
     public static boolean autoAFK = true;
     public static boolean emotionDetection = true;
     public static boolean learningEnabled = true;
-    public static boolean allowPlayCommand = false;
-    public static boolean allowLobbyCommand = false;
-    public static boolean allowWarpCommand = false;
+    public static boolean allowPlayCommand = true;
+    public static boolean allowLobbyCommand = true;
+    public static boolean allowWarpCommand = true;
     public static boolean autoInviteToParty = false;
     public static boolean silentMode = false;
     public static boolean randomDelay = false;
@@ -61,6 +62,7 @@ public class ModConfig {
             JsonObject json = gson.fromJson(reader, JsonObject.class);
             if (json.has("geminiApiKey")) geminiApiKey = json.get("geminiApiKey").getAsString();
             if (json.has("personality")) personality = json.get("personality").getAsString();
+            if (json.has("customUsername")) customUsername = json.get("customUsername").getAsString();
             if (json.has("maxResponseWords")) maxResponseWords = json.get("maxResponseWords").getAsInt();
             if (json.has("minResponseWords")) minResponseWords = json.get("minResponseWords").getAsInt();
             if (json.has("maxContextMessages")) maxContextMessages = json.get("maxContextMessages").getAsInt();
@@ -114,6 +116,9 @@ public class ModConfig {
             JsonObject json = new JsonObject();
             json.addProperty("geminiApiKey", geminiApiKey);
             json.addProperty("personality", personality);
+            if (customUsername != null) {
+                json.addProperty("customUsername", customUsername);
+            }
             json.addProperty("maxResponseWords", maxResponseWords);
             json.addProperty("minResponseWords", minResponseWords);
             json.addProperty("maxContextMessages", maxContextMessages);

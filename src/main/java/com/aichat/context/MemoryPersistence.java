@@ -68,9 +68,20 @@ public class MemoryPersistence {
     public static void addToMemory(String playerName, String role, String content) {
         persistentMemory.putIfAbsent(playerName.toLowerCase(), new ArrayList<>());
         List<ChatMessage> messages = persistentMemory.get(playerName.toLowerCase());
-        messages.add(new ChatMessage(role, content));
-        while (messages.size() > MAX_MESSAGES_PER_PLAYER) {
-            messages.remove(0);
+        
+        // Only add important messages to long-term memory
+        if (com.aichat.features.SmartMemory.isImportantMessage(content) || role.equals("assistant")) {
+            messages.add(new ChatMessage(role, content));
+            
+            // Decay old memories when we hit the limit
+            while (messages.size() > MAX_MESSAGES_PER_PLAYER) {
+                List<ChatMessage> filtered = com.aichat.features.SmartMemory.decayOldMemories(messages);
+                messages.clear();
+                messages.addAll(filtered);
+                if (messages.size() > MAX_MESSAGES_PER_PLAYER) {
+                    messages.remove(0);  // Fallback removal
+                }
+            }
         }
     }
     public static List<ChatMessage> getMemory(String playerName) {

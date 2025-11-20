@@ -27,7 +27,10 @@ public class ConversationManager {
         if (context == null || context.isExpired()) {
             return new ArrayList<>();
         }
-        return context.getMessages();
+        
+        // Use SmartMemory to filter and prioritize messages
+        List<ChatMessage> messages = context.getMessages();
+        return com.aichat.features.SmartMemory.filterMeaningfulContext(messages, ModConfig.maxContextMessages);
     }
     public static void clearContext(String player) {
         conversations.remove(player.toLowerCase());

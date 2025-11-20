@@ -20,7 +20,7 @@ public class AIChatCommand extends CommandBase {
     }
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/aichat <help|toggle|personality|delay|friend|guild|visual|set|addtrigger|removetrigger|listtriggers|config|stats|learn|afk>";
+        return "/aichat <help|toggle|personality|delay|friend|guild|visual|set|addtrigger|removetrigger|listtriggers|config|stats|learn|afk|patterns>";
     }
     @Override
     public int getRequiredPermissionLevel() {
@@ -161,6 +161,12 @@ public class AIChatCommand extends CommandBase {
             case "game":
                 handleGameCommand(sender, args);
                 break;
+            case "patterns":
+                handlePatternsCommand(sender, args);
+                break;
+            case "gui":
+                net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new com.aichat.gui.AIChatGui(null));
+                break;
             case "mute":
                 ChatHandler.enabled = false;
                 ModConfig.save();
@@ -187,6 +193,19 @@ public class AIChatCommand extends CommandBase {
                 break;
             case "testapi":
                 handleTestAPICommand(sender);
+                break;
+            case "username":
+            case "setusername":
+                if (args.length < 2) {
+                    String currentUsername = ModConfig.customUsername != null ? ModConfig.customUsername : Minecraft.getMinecraft().getSession().getUsername();
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Current username: " + EnumChatFormatting.YELLOW + currentUsername));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat username <name>"));
+                    return;
+                }
+                ModConfig.customUsername = args[1];
+                ModConfig.save();
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Username set to: " + EnumChatFormatting.YELLOW + args[1]));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will now refer to you as " + args[1]));
                 break;
             case "ratelimitstatus":
             case "rlstatus":
@@ -269,6 +288,7 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "==================================="));
         sender.addChatMessage(new ChatComponentText(""));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Main Commands:"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat gui " + EnumChatFormatting.GRAY + "- " + EnumChatFormatting.GREEN + "Open Settings GUI " + EnumChatFormatting.GRAY + "(or press Right Shift)"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat help " + EnumChatFormatting.GRAY + "- Show this help menu"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat toggle " + EnumChatFormatting.GRAY + "- Enable/disable AI responses"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat mute " + EnumChatFormatting.GRAY + "- Quick disable all responses"));
@@ -314,6 +334,7 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(""));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Advanced Features:"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat stats " + EnumChatFormatting.GRAY + "- View performance statistics"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat patterns [player] " + EnumChatFormatting.GRAY + "- View AI learned patterns"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat learn <key> <value> " + EnumChatFormatting.GRAY + "- Teach AI a fact"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat afk " + EnumChatFormatting.GRAY + "- View AFK status"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat afk toggle " + EnumChatFormatting.GRAY + "- Toggle AFK mode manually"));
@@ -1249,4 +1270,48 @@ public class AIChatCommand extends CommandBase {
             }
         }).start();
     }
+    
+    private void handlePatternsCommand(ICommandSender sender, String[] args) {
+        String playerName;
+        if (args.length < 2) {
+            // Show patterns for the command sender
+            playerName = Minecraft.getMinecraft().getSession().getUsername();
+        } else {
+            // Show patterns for specified player
+            playerName = args[1];
+        }
+        
+        String summary = com.aichat.features.PatternLearning.getPatternSummary(playerName);
+        
+        if (summary.startsWith("No patterns")) {
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.GRAY + summary));
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Patterns will be learned as you interact with the AI"));
+        } else {
+            sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== Learned Patterns: " + playerName + " =========="));
+            String[] lines = summary.split("\n");
+            for (String line : lines) {
+                if (line.trim().isEmpty()) continue;
+                
+                // Color code the output
+                if (line.contains("Questions asked:")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + line));
+                } else if (line.contains("Most common:") || line.contains("Least common:")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + line));
+                } else if (line.contains("Top interests:")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + line));
+                } else if (line.contains("Optimal response length:")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + line));
+                } else if (line.contains("Humor tolerance:")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + line));
+                } else if (line.contains("Successful patterns:")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + line));
+                } else if (line.startsWith("  -")) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + line));
+                } else {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + line));
+                }
+            }
+        }
+    }
 }
+

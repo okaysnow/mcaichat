@@ -59,10 +59,23 @@ public class ChatHandler {
             lastDecayTime = System.currentTimeMillis();
         }
         String message = event.message.getUnformattedText();
-        String username = Minecraft.getMinecraft().getSession().getUsername();
+        String username = ModConfig.customUsername != null ? ModConfig.customUsername : Minecraft.getMinecraft().getSession().getUsername();
         
         ChatChannel channel = ChatParser.parseMessage(message);
         if (channel == null) {
+            // Filter out system notifications only if they match these patterns
+            if (message.contains("joined the lobby") || 
+                message.contains("left the lobby") ||
+                message.contains("has quit") ||
+                message.contains("reconnected") ||
+                message.contains("is now AFK") ||
+                message.contains("is no longer AFK") ||
+                message.contains("ONLINE:") ||
+                message.contains("has joined") ||
+                message.contains("has disconnected")) {
+                return;
+            }
+            
             if (debugMode) {
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
                     new ChatComponentText(EnumChatFormatting.DARK_GRAY + "[DEBUG] Failed to parse channel from: " + message)
@@ -196,13 +209,18 @@ public class ChatHandler {
                 );
             }
             if (ModConfig.showThinking && !ModConfig.silentMode) {
-                String thinkingMsg = ChatBadges.formatAIMessage("Thinking...", true);
+                String thinkingMsg = ChatBadges.formatAIMessage("... Thinking ...", true);
                 Minecraft.getMinecraft().thePlayer.addChatMessage(
                     new ChatComponentText(thinkingMsg)
                 );
             }
             System.out.println("[AI Chat] Message detected from " + finalSender + " in " + channelType + ": " + finalContent);
             TopicTracker.analyzeAndTrack(finalSender, finalContent);
+            
+            // Track question patterns for learning
+            if (finalContent.contains("?") || finalContent.toLowerCase().matches(".*(how|what|why|where|when|should).*")) {
+                com.aichat.features.PatternLearning.trackQuestion(finalSender, finalContent);
+            }
             
             String contextMessage = finalContent;
             if (finalIsScam) {
@@ -290,6 +308,10 @@ public class ChatHandler {
                 additionalContextBuilder.append(ContextAwareness.getContextPrompt());
                 
                 final String additionalContext = additionalContextBuilder.toString();
+                
+                // Add learned patterns to context
+                String patternContext = com.aichat.features.PatternLearning.getLearningPrompt(finalSender);
+                
                 if (!aiService.isConfigured()) {
                     Minecraft.getMinecraft().thePlayer.addChatMessage(
                         new ChatComponentText(
@@ -299,12 +321,12 @@ public class ChatHandler {
                     );
                     return;
                 }
-                String myUsername = Minecraft.getMinecraft().getSession().getUsername();
+                String myUsername = ModConfig.customUsername != null ? ModConfig.customUsername : Minecraft.getMinecraft().getSession().getUsername();
                 String requestId = finalSender + "_" + System.currentTimeMillis();
                 com.aichat.analytics.ResponseTimeTracker.startRequest(requestId);
                 RetryLogic.retryWithBackoff(() -> 
                     aiService.generateResponse(
-                        translatedContent + topicContext + variationPrompt + mockingEnhancement + additionalContext,
+                        translatedContent + topicContext + variationPrompt + mockingEnhancement + additionalContext + patternContext,
                         ConversationManager.getContext(finalSender),
                         effectivePersonality,
                         ModConfig.maxResponseWords,
@@ -313,6 +335,10 @@ public class ChatHandler {
                 ).thenAccept(response -> {
                     if (response != null && !response.isEmpty()) {
                         com.aichat.analytics.ResponseTimeTracker.endRequest(requestId, finalSender, true);
+                        
+                        // Track successful response pattern
+                        com.aichat.features.PatternLearning.trackResponse(finalSender, originalMessage, response, true);
+                        
                         if (ResponseVariation.isDuplicate(finalSender, response)) {
                             System.out.println("[AI Chat] Skipping duplicate response");
                             return;
@@ -357,6 +383,10 @@ public class ChatHandler {
         }
         
         if (channelType == ChatChannel.ChannelType.GUILD) {
+            return true;
+        }
+        
+        if (channelType == ChatChannel.ChannelType.PARTY) {
             return true;
         }
         String lowerMessage = message.toLowerCase();

@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 public class GeminiService implements AIService {
-    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+    private static final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
     @Override
     public CompletableFuture<String> generateResponse(String message, List<ChatMessage> context, String personality, int maxLength, String username) {
         return CompletableFuture.supplyAsync(() -> {
@@ -80,13 +80,17 @@ public class GeminiService implements AIService {
                     while ((responseLine = br.readLine()) != null) {
                         errorResponse.append(responseLine.trim());
                     }
-                    System.err.println("[AI Chat] Gemini API Error: " + errorResponse.toString());
+                    String errorMsg = errorResponse.toString();
+                    System.err.println("[AI Chat] Gemini API Error (Code " + responseCode + "): " + errorMsg);
+                    System.err.println("[AI Chat] API URL used: " + API_URL);
                     if (responseCode == 403) {
-                        return "Gemini API key is invalid or not authorized.";
+                        return "API key invalid. Get one at: https://aistudio.google.com/app/apikey";
+                    } else if (responseCode == 404) {
+                        return "Model not found. Check Minecraft logs for full error details.";
                     } else if (responseCode == 429) {
                         return "Rate limit reached. Please wait a moment.";
                     }
-                    return "Error: Unable to connect to Gemini API (Code: " + responseCode + ")";
+                    return "API Error " + responseCode + ": " + (errorMsg.length() > 100 ? errorMsg.substring(0, 100) : errorMsg);
                 }
             } catch (Exception e) {
                 System.err.println("[AI Chat] Gemini error: " + e.getMessage());

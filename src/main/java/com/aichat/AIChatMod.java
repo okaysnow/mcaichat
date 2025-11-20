@@ -20,6 +20,7 @@ public class AIChatMod {
         System.out.println("AI Chat Mod: Pre-initialization");
         ModConfig.load(event.getModConfigurationDirectory());
         FriendManager.load(event.getModConfigurationDirectory());
+        com.aichat.features.PatternLearning.load(event.getModConfigurationDirectory());
     }
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
@@ -29,5 +30,9 @@ public class AIChatMod {
         MinecraftForge.EVENT_BUS.register(new PartyManager());
         GameActionManager.loadFromConfig();
         ClientCommandHandler.instance.registerCommand(new AIChatCommand());
+        
+        // Register GUI keybind
+        com.aichat.gui.GuiKeyHandler.register();
+        MinecraftForge.EVENT_BUS.register(new com.aichat.gui.GuiKeyHandler());
     }
 }
