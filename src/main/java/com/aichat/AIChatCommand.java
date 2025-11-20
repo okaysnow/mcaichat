@@ -931,13 +931,21 @@ public class AIChatCommand extends CommandBase {
         }
     }
     private void handleStatsCommand(ICommandSender sender, String[] args) {
+        com.aichat.analytics.ResponseTimeTracker tracker = new com.aichat.analytics.ResponseTimeTracker();
+        long avgTime = com.aichat.analytics.ResponseTimeTracker.getAverageResponseTime();
+        long fastest = com.aichat.analytics.ResponseTimeTracker.getFastestTime();
+        long slowest = com.aichat.analytics.ResponseTimeTracker.getSlowestTime();
+        int total = com.aichat.analytics.ResponseTimeTracker.getTotalResponses();
+        int failed = com.aichat.analytics.ResponseTimeTracker.getFailedResponses();
+        double successRate = total > 0 ? ((total - failed) * 100.0 / total) : 100.0;
+        
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== AI Chat Statistics =========="));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Total Responses: " + EnumChatFormatting.YELLOW + "0"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Failed Responses: " + EnumChatFormatting.YELLOW + "0"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Success Rate: " + EnumChatFormatting.YELLOW + "100%"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Avg Response Time: " + EnumChatFormatting.YELLOW + "0ms"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Fastest Response: " + EnumChatFormatting.YELLOW + "0ms"));
-        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Slowest Response: " + EnumChatFormatting.YELLOW + "0ms"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Total Responses: " + EnumChatFormatting.YELLOW + total));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Failed Responses: " + EnumChatFormatting.YELLOW + failed));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Success Rate: " + EnumChatFormatting.YELLOW + String.format("%.1f%%", successRate)));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Avg Response Time: " + EnumChatFormatting.YELLOW + avgTime + "ms"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Fastest Response: " + EnumChatFormatting.YELLOW + fastest + "ms"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.WHITE + "Slowest Response: " + EnumChatFormatting.YELLOW + slowest + "ms"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Note: Statistics reset on restart"));
     }
     private void handleLearnCommand(ICommandSender sender, String[] args) {

@@ -60,10 +60,7 @@ public class ChatHandler {
         }
         String message = event.message.getUnformattedText();
         String username = Minecraft.getMinecraft().getSession().getUsername();
-        ChatParser.GameEvent gameEvent = ChatParser.parseGameEvent(message);
-        if (gameEvent != null && ModConfig.personality.equals("mocking")) {
-            handleGameEvent(gameEvent, username);
-        }
+        
         ChatChannel channel = ChatParser.parseMessage(message);
         if (channel == null) {
             if (debugMode) {
@@ -303,6 +300,8 @@ public class ChatHandler {
                     return;
                 }
                 String myUsername = Minecraft.getMinecraft().getSession().getUsername();
+                String requestId = finalSender + "_" + System.currentTimeMillis();
+                com.aichat.analytics.ResponseTimeTracker.startRequest(requestId);
                 RetryLogic.retryWithBackoff(() -> 
                     aiService.generateResponse(
                         translatedContent + topicContext + variationPrompt + mockingEnhancement + additionalContext,
@@ -313,6 +312,7 @@ public class ChatHandler {
                     ), RetryLogic.getRandomFallback()
                 ).thenAccept(response -> {
                     if (response != null && !response.isEmpty()) {
+                        com.aichat.analytics.ResponseTimeTracker.endRequest(requestId, finalSender, true);
                         if (ResponseVariation.isDuplicate(finalSender, response)) {
                             System.out.println("[AI Chat] Skipping duplicate response");
                             return;
@@ -341,6 +341,7 @@ public class ChatHandler {
                         System.out.println("[AI Chat] Responded to " + finalSender + " in " + channelType + ": " + formattedResponse);
                     }
                 }).exceptionally(ex -> {
+                    com.aichat.analytics.ResponseTimeTracker.endRequest(requestId, finalSender, false);
                     ex.printStackTrace();
                     System.err.println("[AI Chat] Error generating response: " + ex.getMessage());
                     return null;
