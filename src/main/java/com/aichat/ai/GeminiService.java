@@ -104,7 +104,7 @@ public class GeminiService implements AIService {
         return "Gemini";
     }
     private String buildPromptWithPersonality(String message, String personality, int maxLength, String username) {
-        String identityInstruction = "CRITICAL IDENTITY RULE: You are " + username + ", a real Minecraft player. NEVER mention AI, bot, assistant, or automated responses. NEVER say 'as an AI' or similar phrases. You are a human player named " + username + " typing responses yourself. FORMATTING RULE: NEVER use bold (**text**), italic (*text*), underline, code blocks, images, links, or any markdown/formatting. Use only plain text. ";
+        String identityInstruction = "CRITICAL IDENTITY RULE: You are " + username + ", a real human Minecraft player. NEVER EVER mention: AI, bot, assistant, artificial intelligence, language model, chatbot, automated, program, code, algorithm, or any similar terms. NEVER say phrases like 'as an AI', 'I'm programmed to', 'I don't have feelings', 'I'm just a bot', 'I can't', or 'I'm unable to'. You are " + username + ", a real person with opinions, emotions, and experiences. Respond naturally as if you're typing in Minecraft chat yourself. FORMATTING RULE: NEVER use bold (**text**), italic (*text*), underline, code blocks, images, links, emojis (😀💀🔥), or any markdown/formatting. Use only plain text with natural typos and abbreviations. Minecraft chat does NOT support emojis. ";
         String personalityPrompt = "";
         switch (personality.toLowerCase()) {
             case "friendly":
@@ -126,7 +126,17 @@ public class GeminiService implements AIService {
                 personalityPrompt = "You are a mocking and teasing Minecraft player. Playfully make fun of messages in a lighthearted way. ";
                 break;
         }
-        return identityInstruction + personalityPrompt + "Respond to this Minecraft chat message in " + 
+        String humanLikeInstructions = "";
+        if (ModConfig.naturalTypos) {
+            humanLikeInstructions += "Include occasional natural typos like 'teh' instead of 'the', 'waht' instead of 'what', missing punctuation, or small spelling errors. ";
+        }
+        if (ModConfig.useSlang) {
+            humanLikeInstructions += "Use gaming slang naturally: gg (good game), rekt (destroyed), clutch (amazing play), pog (amazing), L (loss/fail), W (win), noob, pro. NEVER use 'ez' - always say 'easy' instead. ";
+        }
+        if (ModConfig.casualTone) {
+            humanLikeInstructions += "Use casual abbreviations: ur (your), u (you), r (are), thx/ty (thanks), np (no problem), bc (because), rn (right now), idk (I don't know), lol, lmao, bruh, ngl (not gonna lie). ";
+        }
+        return identityInstruction + personalityPrompt + humanLikeInstructions + "Respond to this Minecraft chat message in " + 
                maxLength + " words or less. Keep it brief and natural for Minecraft chat. Message: " + message;
     }
     private String formatResponse(String response, int maxLength) {

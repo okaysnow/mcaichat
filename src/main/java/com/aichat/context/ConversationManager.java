@@ -35,6 +35,11 @@ public class ConversationManager {
     public static void clearAllContexts() {
         conversations.clear();
     }
+    
+    public static void clearAll() {
+        conversations.clear();
+    }
+    
     public static void cleanupExpired() {
         conversations.entrySet().removeIf(entry -> entry.getValue().isExpired());
     }

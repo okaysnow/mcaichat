@@ -38,6 +38,9 @@ public class TypingSimulator {
         message = message.replaceAll("&[a-fklmnor0-9]", "");
         message = message.replaceAll("§[a-fklmnor0-9]", "");
         
+        message = message.replaceAll("[\\p{So}\\p{Cn}]", "");
+        message = message.replaceAll(":[a-z_]+:", "");
+        
         return message.trim();
     }
 }

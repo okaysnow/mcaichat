@@ -44,6 +44,11 @@ public class ModConfig {
     public static int rateLimitWarningPercent = 80;
     public static boolean webSearch = true;
     public static boolean sentimentAnalysis = true;
+    public static boolean whitelistMode = false;
+    public static boolean eventTriggers = true;
+    public static boolean naturalTypos = true;
+    public static boolean useSlang = true;
+    public static boolean casualTone = true;
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static File configFile;
     public static void load(File configDir) {
@@ -92,6 +97,11 @@ public class ModConfig {
             if (json.has("rateLimitWarningPercent")) rateLimitWarningPercent = json.get("rateLimitWarningPercent").getAsInt();
             if (json.has("webSearch")) webSearch = json.get("webSearch").getAsBoolean();
             if (json.has("sentimentAnalysis")) sentimentAnalysis = json.get("sentimentAnalysis").getAsBoolean();
+            if (json.has("whitelistMode")) whitelistMode = json.get("whitelistMode").getAsBoolean();
+            if (json.has("eventTriggers")) eventTriggers = json.get("eventTriggers").getAsBoolean();
+            if (json.has("naturalTypos")) naturalTypos = json.get("naturalTypos").getAsBoolean();
+            if (json.has("useSlang")) useSlang = json.get("useSlang").getAsBoolean();
+            if (json.has("casualTone")) casualTone = json.get("casualTone").getAsBoolean();
             System.out.println("[AI Chat] Configuration loaded");
         } catch (Exception e) {
             System.err.println("[AI Chat] Error loading config: " + e.getMessage());
@@ -140,6 +150,11 @@ public class ModConfig {
             json.addProperty("rateLimitWarningPercent", rateLimitWarningPercent);
             json.addProperty("webSearch", webSearch);
             json.addProperty("sentimentAnalysis", sentimentAnalysis);
+            json.addProperty("whitelistMode", whitelistMode);
+            json.addProperty("eventTriggers", eventTriggers);
+            json.addProperty("naturalTypos", naturalTypos);
+            json.addProperty("useSlang", useSlang);
+            json.addProperty("casualTone", casualTone);
             try (FileWriter writer = new FileWriter(configFile)) {
                 gson.toJson(json, writer);
             }

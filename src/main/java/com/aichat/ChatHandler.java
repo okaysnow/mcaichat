@@ -14,6 +14,11 @@ import com.aichat.features.RateLimitMonitor;
 import com.aichat.features.TypingSimulator;
 import com.aichat.features.WebSearchService;
 import com.aichat.features.SentimentAnalyzer;
+import com.aichat.features.TeammateAnalyzer;
+import com.aichat.features.SlangDictionary;
+import com.aichat.features.ProfanityFilter;
+import com.aichat.features.ContextAwareness;
+import com.aichat.features.EventTriggers;
 import com.aichat.security.ScamDetector;
 import com.aichat.friends.FriendManager;
 import com.aichat.hypixel.PartyLeaderAssistant;
@@ -149,6 +154,28 @@ public class ChatHandler {
             SmartInvites.analyzeMessage(sender, content);
             PartyLeaderAssistant.onMemberActivity(sender);
             
+            if (channelType == ChatChannel.ChannelType.PUBLIC && ModConfig.eventTriggers) {
+                if (content.contains("was killed by") || content.contains("killed")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.KILL, sender);
+                } else if (content.contains("died") || content.contains("was slain")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.DEATH, sender);
+                } else if (content.contains("won the game") || content.contains("victory")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.WIN, sender);
+                } else if (content.contains("lost the game") || content.contains("defeat")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.LOSS, sender);
+                } else if (content.contains("leveled up") || content.contains("level up")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.LEVEL_UP, sender);
+                } else if (content.contains("achievement") || content.contains("unlocked")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.ACHIEVEMENT, sender);
+                } else if (content.contains("bed destroyed") || content.contains("bed was destroyed")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.BED_DESTROYED, sender);
+                } else if (content.contains("final kill")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.FINAL_KILL, sender);
+                } else if (content.contains("game starting") || content.contains("game started")) {
+                    EventTriggers.triggerEvent(EventTriggers.EventType.GAME_START, sender);
+                }
+            }
+            
             boolean isScam = false;
             if (ModConfig.scamDetection) {
                 isScam = ScamDetector.detectScam(content, sender);
@@ -246,6 +273,25 @@ public class ChatHandler {
                 if (conversationStarter != null) {
                     additionalContextBuilder.append("\n[CONVERSATION STARTER: Consider using this greeting: \"").append(conversationStarter).append("\"]");
                 }
+                
+                if (channelType == ChatChannel.ChannelType.PARTY) {
+                    TeammateAnalyzer.trackPartyMember(finalSender);
+                    TeammateAnalyzer.recordActivity(finalSender, TeammateAnalyzer.ActivityType.MESSAGE);
+                    additionalContextBuilder.append(TeammateAnalyzer.getContextPrompt());
+                    
+                    if (SlangDictionary.containsSlang(originalMessage)) {
+                        additionalContextBuilder.append(SlangDictionary.getContextPrompt(originalMessage));
+                    }
+                    
+                    if (ProfanityFilter.isToxic(originalMessage)) {
+                        additionalContextBuilder.append(ProfanityFilter.getContextPrompt(originalMessage));
+                    }
+                }
+                
+                ContextAwareness.detectGameMode(originalMessage);
+                ContextAwareness.detectLocation(originalMessage);
+                additionalContextBuilder.append(ContextAwareness.getContextPrompt());
+                
                 final String additionalContext = additionalContextBuilder.toString();
                 if (!aiService.isConfigured()) {
                     Minecraft.getMinecraft().thePlayer.addChatMessage(
@@ -305,6 +351,10 @@ public class ChatHandler {
         return "[AI] ";
     }
     private boolean shouldRespond(String message, String username, String sender, ChatChannel.ChannelType channelType) {
+        if (ModConfig.whitelistMode && !FriendManager.isFriend(sender)) {
+            return false;
+        }
+        
         if (channelType == ChatChannel.ChannelType.GUILD) {
             return true;
         }

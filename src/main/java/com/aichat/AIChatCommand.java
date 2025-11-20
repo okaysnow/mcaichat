@@ -1,6 +1,9 @@
 package com.aichat;
 import com.aichat.config.ModConfig;
 import com.aichat.features.RateLimitMonitor;
+import com.aichat.features.CommandShortcuts;
+import com.aichat.features.EventTriggers;
+import com.aichat.features.TeammateAnalyzer;
 import com.aichat.friends.FriendManager;
 import com.aichat.hypixel.PartyManager;
 import com.aichat.hypixel.GameActionManager;
@@ -29,6 +32,11 @@ public class AIChatCommand extends CommandBase {
             showHelpMenu(sender);
             return;
         }
+        
+        if (args.length > 0 && CommandShortcuts.isShortcut(args[0])) {
+            args[0] = CommandShortcuts.expandShortcut(args[0]);
+        }
+        
         switch (args[0].toLowerCase()) {
             case "help":
                 showHelpMenu(sender);
@@ -194,6 +202,60 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "All AI responses disabled"));
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "Use /aichat unmute to re-enable"));
                 break;
+            case "whitelist":
+                if (args.length < 2) {
+                    String wlStatus = ModConfig.whitelistMode ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Whitelist mode is " + wlStatus));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat whitelist <true|false>"));
+                    return;
+                }
+                if (args[1].equalsIgnoreCase("true") || args[1].equalsIgnoreCase("false")) {
+                    ModConfig.whitelistMode = Boolean.parseBoolean(args[1]);
+                    ModConfig.save();
+                    String wlModeStatus = ModConfig.whitelistMode ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Whitelist mode " + wlModeStatus));
+                    if (ModConfig.whitelistMode) {
+                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will only respond to friends"));
+                    }
+                } else {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
+                }
+                break;
+            case "wipe":
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Wiping all AI data..."));
+                com.aichat.context.MemoryPersistence.clearAllMemory();
+                com.aichat.context.ConversationManager.clearAll();
+                TeammateAnalyzer.clearAllStats();
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "All AI data cleared (memory, conversations, teammate stats)"));
+                break;
+            case "shortcuts":
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "========== Command Shortcuts =========="));
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Use these quick shortcuts with /aichat:"));
+                String[] shortcutList = CommandShortcuts.getShortcutList().split("\n");
+                for (String shortcut : shortcutList) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + shortcut));
+                }
+                break;
+            case "eventtriggers":
+                if (args.length < 2) {
+                    String etStatus = ModConfig.eventTriggers ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Event triggers are " + etStatus));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat eventtriggers <true|false>"));
+                    return;
+                }
+                if (args[1].equalsIgnoreCase("true") || args[1].equalsIgnoreCase("false")) {
+                    ModConfig.eventTriggers = Boolean.parseBoolean(args[1]);
+                    EventTriggers.setEnabled(ModConfig.eventTriggers);
+                    ModConfig.save();
+                    String etModeStatus = ModConfig.eventTriggers ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Event triggers " + etModeStatus));
+                    if (ModConfig.eventTriggers) {
+                        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will respond to kills, deaths, wins, and other game events in all chat"));
+                    }
+                } else {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Value must be true or false"));
+                }
+                break;
             default:
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "Unknown subcommand. Use /aichat help"));
                 break;
@@ -220,6 +282,21 @@ public class AIChatCommand extends CommandBase {
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat ratelimitstatus " + EnumChatFormatting.GRAY + "- View current rate limit usage"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat emergency " + EnumChatFormatting.GRAY + "- Emergency stop (disable everything)"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat config " + EnumChatFormatting.GRAY + "- View current settings"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat shortcuts " + EnumChatFormatting.GRAY + "- View command shortcuts (q, m, f+, etc.)"));
+        sender.addChatMessage(new ChatComponentText(""));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Human-Like Settings:"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set typingdelay <true|false> " + EnumChatFormatting.GRAY + "- Realistic typing speed"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set randomdelay <true|false> " + EnumChatFormatting.GRAY + "- Random response delays"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set naturaltypos <true|false> " + EnumChatFormatting.GRAY + "- Natural typos/errors"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set useslang <true|false> " + EnumChatFormatting.GRAY + "- Use gaming slang"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set casualtone <true|false> " + EnumChatFormatting.GRAY + "- Casual abbreviations"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set maxwords <1-100> " + EnumChatFormatting.GRAY + "- Response length"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat set minwords <1-50> " + EnumChatFormatting.GRAY + "- Minimum response length"));
+        sender.addChatMessage(new ChatComponentText(""));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Privacy & Data:"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat whitelist <true|false> " + EnumChatFormatting.GRAY + "- Only respond to friends"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat wipe " + EnumChatFormatting.GRAY + "- Clear all data (memory, stats)"));
+        sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat eventtriggers <true|false> " + EnumChatFormatting.GRAY + "- Toggle event responses"));
         sender.addChatMessage(new ChatComponentText(""));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.YELLOW + "Friend Management:"));
         sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + " /aichat friend add <player> " + EnumChatFormatting.GRAY + "- Add friend"));
@@ -794,6 +871,57 @@ public class AIChatCommand extends CommandBase {
                 sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Sentiment analysis " + sentimentStatus));
                 if (ModConfig.sentimentAnalysis) {
                     sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "AI will adapt responses to your emotional tone"));
+                }
+                break;
+                
+            case "naturaltypos":
+            case "typos":
+                if (args.length < 3) {
+                    String current = ModConfig.naturalTypos ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Natural typos: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set naturaltypos <true|false>"));
+                    return;
+                }
+                ModConfig.naturalTypos = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String typosStatus = ModConfig.naturalTypos ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Natural typos " + typosStatus));
+                if (ModConfig.naturalTypos) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Responses will include natural typos and errors"));
+                }
+                break;
+                
+            case "useslang":
+            case "slang":
+                if (args.length < 3) {
+                    String current = ModConfig.useSlang ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Gaming slang: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set useslang <true|false>"));
+                    return;
+                }
+                ModConfig.useSlang = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String slangStatus = ModConfig.useSlang ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Gaming slang " + slangStatus));
+                if (ModConfig.useSlang) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Will use gaming slang like gg, rekt, clutch, etc."));
+                }
+                break;
+                
+            case "casualtone":
+            case "casual":
+                if (args.length < 3) {
+                    String current = ModConfig.casualTone ? "enabled" : "disabled";
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Casual tone: " + EnumChatFormatting.YELLOW + current));
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Usage: /aichat set casualtone <true|false>"));
+                    return;
+                }
+                ModConfig.casualTone = Boolean.parseBoolean(args[2]);
+                ModConfig.save();
+                String casualStatus = ModConfig.casualTone ? EnumChatFormatting.GREEN + "enabled" : EnumChatFormatting.RED + "disabled";
+                sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "[AI Chat] " + EnumChatFormatting.WHITE + "Casual tone " + casualStatus));
+                if (ModConfig.casualTone) {
+                    sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "Will use abbreviations like ur, thx, lol, etc."));
                 }
                 break;
                 
